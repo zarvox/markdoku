@@ -838,7 +838,7 @@ class Markdown(object):
     
         text = self._encode_amps_and_angles(text)
     
-        text = self._do_italics_and_bold(text)
+        text = self._do_italics_bold_underline_mono(text)
     
         if "smarty-pants" in self.extras:
             text = self._do_smart_punctuation(text)
@@ -1188,12 +1188,12 @@ class Markdown(object):
         return "<h%d%s>%s</h%d>\n\n" % (n, header_id_attr, html, n)
 
     _atx_h_re = re.compile(r'''
-        ^(\#{1,6})  # \1 = string of #'s
+        ^(\={1,6})  # \1 = string of ='s
         [ \t]*
         (.+?)       # \2 = Header text
         [ \t]*
         (?<!\\)     # ensure not an escaped trailing '#'
-        \#*         # optional closing #'s (not counted)
+        \=*         # optional closing #'s (not counted)
         \n+
         ''', re.X | re.M)
     def _atx_h_sub(self, match):
@@ -1219,7 +1219,8 @@ class Markdown(object):
         #  
         #     Header 2
         #     --------
-        text = self._setext_h_re.sub(self._setext_h_sub, text)
+# zarvox: nuke this nonsense
+#        text = self._setext_h_re.sub(self._setext_h_sub, text)
 
         # atx-style headers:
         #   # Header 1
@@ -1232,10 +1233,11 @@ class Markdown(object):
         return text
 
 
-    _marker_ul_chars  = '*+-'
-    _marker_any = r'(?:[%s]|\d+\.)' % _marker_ul_chars
+    _marker_ul_chars  = '*'
+    _marker_ol_chars  = '-#'
+    _marker_any = r'(?:[%s]|[%s])' % (_marker_ul_chars, _marker_ol_chars)
     _marker_ul = '(?:[%s])' % _marker_ul_chars
-    _marker_ol = r'(?:\d+\.)'
+    _marker_ol = r'(?:[%s])' % _marker_ol_chars
 
     def _list_sub(self, match):
         lst = match.group(1)
@@ -1519,18 +1521,15 @@ class Markdown(object):
             text = text.replace(before, after)
         return text
 
-    _strong_re = re.compile(r"(\*\*|__)(?=\S)(.+?[*_]*)(?<=\S)\1", re.S)
-    _em_re = re.compile(r"(\*|_)(?=\S)(.+?)(?<=\S)\1", re.S)
-    _code_friendly_strong_re = re.compile(r"\*\*(?=\S)(.+?[*_]*)(?<=\S)\*\*", re.S)
-    _code_friendly_em_re = re.compile(r"\*(?=\S)(.+?)(?<=\S)\*", re.S)
-    def _do_italics_and_bold(self, text):
-        # <strong> must go first:
-        if "code-friendly" in self.extras:
-            text = self._code_friendly_strong_re.sub(r"<strong>\1</strong>", text)
-            text = self._code_friendly_em_re.sub(r"<em>\1</em>", text)
-        else:
-            text = self._strong_re.sub(r"<strong>\2</strong>", text)
-            text = self._em_re.sub(r"<em>\2</em>", text)
+    _strong_re = re.compile(r"(\*\*)(?=\S)(.+?[*]*)(?<=\S)\*\*", re.S)
+    _em_re = re.compile(r"(\/\/)(?=\S)(.+?)(?<=\S)\/\/", re.S)
+    _underline_re = re.compile(r"(__)(?=\S)(.+?)(?<=\S)__", re.S)
+    _monospace_re = re.compile(r"(\'\')(?=\S)(.+?)(?<=\S)\'\'", re.S)
+    def _do_italics_bold_underline_mono(self, text):
+        text = self._strong_re.sub(r"<strong>\2</strong>", text)
+        text = self._em_re.sub(r"<em>\2</em>", text)
+        text = self._underline_re.sub(r"<span style='text-decoration:underline;'>\2</span>", text)
+        text = self._monospace_re.sub(r"<span style='font-family:monospace;'>\2</span>", text)
         return text
 
     # "smarty-pants" extra: Very liberal in interpreting a single prime as an
