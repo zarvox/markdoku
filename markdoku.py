@@ -1189,6 +1189,7 @@ class Markdown(object):
 
     _atx_h_re = re.compile(r'''
         ^(\={1,6})  # \1 = string of ='s
+        ^(\#{1,6})  # \1 = string of #'s - for markdown interoperability
         [ \t]*
         (.+?)       # \2 = Header text
         [ \t]*
@@ -1219,8 +1220,7 @@ class Markdown(object):
         #  
         #     Header 2
         #     --------
-# zarvox: nuke this nonsense
-#        text = self._setext_h_re.sub(self._setext_h_sub, text)
+        text = self._setext_h_re.sub(self._setext_h_sub, text)
 
         # atx-style headers:
         #   # Header 1
