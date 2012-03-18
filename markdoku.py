@@ -1522,12 +1522,12 @@ class Markdown(object):
         return text
 
     _strong_re = re.compile(r"(\*\*)(?=\S)(.+?[*]*)(?<=\S)\*\*", re.S)
-    _em_re = re.compile(r"[^:](\/\/)(?=\S)(.+?)(?<=\S)[^:]\/\/", re.S)
+    _em_re = re.compile(r"(^|[^:])(\/\/)(?=\S)(.+?[^:])(?<=\S)[^:]\/\/", re.S)
     _underline_re = re.compile(r"(__)(?=\S)(.+?)(?<=\S)__", re.S)
     _monospace_re = re.compile(r"(\'\')(?=\S)(.+?)(?<=\S)\'\'", re.S)
     def _do_italics_bold_underline_mono(self, text):
         text = self._strong_re.sub(r"<strong>\2</strong>", text)
-        text = self._em_re.sub(r"<em>\2</em>", text)
+        text = self._em_re.sub(r"\1<em>\3</em>", text)
         text = self._underline_re.sub(r"<span style='text-decoration:underline;'>\2</span>", text)
         text = self._monospace_re.sub(r"<span style='font-family:monospace;'>\2</span>", text)
         return text
